@@ -6,64 +6,66 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
     <style>
-      .card img {
-        display: flex;
-        justify-content: center;
+      @media (min-width: 576px) {
+        .card-columns {
+          column-count: 2;
+        }
       }
 
-      .card .card-body {
-        text-align: center;
+      @media (min-width: 768px) {
+        .card-columns {
+          column-count: 3;
+        }
       }
-
     </style>
   </head>
   <body>
-
     <div class="container mt-4">
       <h1 class="text-center">Samuel Meme</h1>
+      <div class="d-flex justify-content-center">
+        <div class="spinner-border text-primary">
+          <span class="sr-only">Loading...</span>
+        </div>
+      </div>
       <div id="cards" class="card-columns"></div>
     </div>
 
+    <h2 class="error text-danger text-center" style="display: none;">Error QQ</h2>
+
     <template id="card">
       <div class="card p-3">
-        <div class="card-body">
+        <div class="card-body text-center">
           <h3 class="card-title"></h3>
         </div>
-        <img class="card-img-top">
+        <img class="card-img-top d-flex justify-content-center">
       </div>
     </template>
 
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>
     <script>
-      fetch('https://api.github.com/repos/Yojahuang/samuel_meme/git/trees/master')
+      fetch('/data.json')
         .then(res => res.json())
         .then(res => {
-          const whitelist = [/^.*\.png$/, /^.*\.jpg$/, /^.*\.jpeg$/]
-          const filetype = {
-            'png': 'image/png',
-            'jpg': 'image/jpeg',
-            'jpeg': 'image/jpeg'
-          }
+          const template = document.querySelector('#card')
+          const cards = document.querySelector('#cards')
 
-          const files = res.tree.map(file => file.path).filter(file => whitelist.some(ext => ext.test(file)))
+          res.data.forEach(file => {
+            const node = template.cloneNode(true)
 
-          const template = document.getElementById('card')
+            const img = node.content.querySelector('img')
+            img.src = encodeURIComponent(file)
 
-          files.forEach(file => {
-            fetch(`https://api.github.com/repos/Yojahuang/samuel_meme/contents/${file}`)
-              .then(res => res.json())
-              .then(res => {
-                const node = template.cloneNode(true)
+            const title = node.content.querySelector('.card-title')
+            title.innerText = file.replace(/\.(png|jpg|jpeg)/g, '')
 
-                const img = node.content.querySelector('img')
-                img.src = `data:${filetype[res.name.split('.').slice(-1)]};base64,${res.content}`
-
-                const title = node.content.querySelector('.card-title')
-                title.innerText = res.name.replace(/\.(png|jpg|jpeg)/g, '')
-
-                document.getElementById('cards').appendChild(document.importNode(node.content, true))
-              })
+            cards.appendChild(document.importNode(node.content, true))
           })
+        })
+        .catch(() => {
+          document.querySelector('.error').style = ''
+        })
+        .finally(() => {
+          document.querySelector('.spinner-border').style = 'display: none;'
         })
     </script>
   </body>
