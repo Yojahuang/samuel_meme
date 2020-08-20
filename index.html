@@ -38,14 +38,14 @@
       fetch('https://api.github.com/repos/Yojahuang/samuel_meme/git/trees/master')
         .then(res => res.json())
         .then(res => {
-          const ignore = ['.gitignore']
+          const whitelist = [/^.*\.png$/, /^.*\.jpg$/, /^.*\.jpeg$/]
           const filetype = {
             'png': 'image/png',
             'jpg': 'image/jpeg',
             'jpeg': 'image/jpeg'
           }
 
-          const files = res.tree.map(file => file.path).filter(file => !ignore.includes(file))
+          const files = res.tree.map(file => file.path).filter(file => whitelist.some(ext => ext.test(file)))
 
           const template = document.getElementById('card')
 
