@@ -17,6 +17,20 @@
           column-count: 3;
         }
       }
+
+      .modal img {
+        width: 100%;
+      }
+
+      .card {
+        box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.15);
+      }
+
+      .card:hover {
+        cursor: pointer;
+        box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+        transform: scale(1.01, 1.01);
+      }
     </style>
   </head>
   <body>
@@ -32,8 +46,24 @@
 
     <h2 class="error text-danger text-center" style="display: none;">Error QQ</h2>
 
+    <div id="modal" class="modal fade">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"></h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <img class="d-flex justify-content-center">
+          </div>
+        </div>
+      </div>
+    </div>
+
     <template id="card">
-      <div class="card p-3">
+      <div class="card p-3 hoverable">
         <div class="card-body text-center">
           <h3 class="card-title"></h3>
         </div>
@@ -41,32 +71,56 @@
       </div>
     </template>
 
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>
     <script>
-      fetch('data.json')
-        .then(res => res.json())
-        .then(res => {
-          const template = document.querySelector('#card')
-          const cards = document.querySelector('#cards')
+      /* kill me, bootstrap 4 is still using jquery... */
+      $(document).ready(function() {
+        function getTitle(name) {
+          return name.replace(/\.(png|jpg|jpeg)/g, '')
+        }
 
-          res.data.forEach(file => {
-            const node = template.cloneNode(true)
+        function getUrl(name) {
+          return encodeURIComponent(name)
+        }
 
-            const img = node.content.querySelector('img')
-            img.src = encodeURIComponent(file)
+        function zoomImage() {
+          const file = this.dataset.file
+          const modal = document.getElementById('modal')
+          modal.querySelector('.modal-title').innerText = getTitle(file)
+          modal.querySelector('img').src = getUrl(file)
+          $('#modal').modal('show')
+        }
 
-            const title = node.content.querySelector('.card-title')
-            title.innerText = file.replace(/\.(png|jpg|jpeg)/g, '')
+        $('#modal').modal('hide')
 
-            cards.appendChild(document.importNode(node.content, true))
+        fetch('data.json')
+          .then(res => res.json())
+          .then(res => {
+            const template = document.querySelector('#card')
+            const cards = document.querySelector('#cards')
+
+            res.data.forEach(file => {
+              const node = template.cloneNode(true)
+              node.content.querySelector('.card').dataset.file = file
+
+              const img = node.content.querySelector('img')
+              img.src = getUrl(file)
+
+              const title = node.content.querySelector('.card-title')
+              title.innerText = getTitle(file)
+
+              cards.appendChild(document.importNode(node.content, true))
+            })
           })
-        })
-        .catch(() => {
-          document.querySelector('.error').style = ''
-        })
-        .finally(() => {
-          document.querySelector('.spinner-border').style = 'display: none;'
-        })
+          .catch(() => {
+            document.querySelector('.error').style = ''
+          })
+          .finally(() => {
+            document.querySelector('.spinner-border').style = 'display: none;'
+            document.querySelectorAll('.card').forEach(node => node.addEventListener('click', zoomImage))
+          })
+      })
     </script>
   </body>
 </html>
